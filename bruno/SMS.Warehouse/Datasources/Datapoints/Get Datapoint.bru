@@ -1,0 +1,16 @@
+meta {
+  name: Get Datapoint
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{warehouseUrl}}/datasources/:id/datapoints/:dpID
+  body: none
+  auth: none
+}
+
+params:path {
+  id:
+  dpID:
+}

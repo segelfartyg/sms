@@ -1,0 +1,30 @@
+meta {
+  name: Update Box
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/pages/:pageID/boxes/:boxID
+  body: json
+  auth: none
+}
+
+params:path {
+  pageID:
+  boxID:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "text",
+    "position": 0,
+    "content": {
+      "value": "Updated content"
+    }
+  }
+}

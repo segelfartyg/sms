@@ -1,0 +1,28 @@
+meta {
+  name: Update Datapoint
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{warehouseUrl}}/datasources/:id/datapoints/:dpID
+  body: json
+  auth: none
+}
+
+params:path {
+  id:
+  dpID:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tag": "headline",
+    "content": "Updated content goes here.",
+    "description": "Updated description"
+  }
+}

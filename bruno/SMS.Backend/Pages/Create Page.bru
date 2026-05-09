@@ -1,0 +1,22 @@
+meta {
+  name: Create Page
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pages
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "My Page",
+    "slug": "my-page"
+  }
+}

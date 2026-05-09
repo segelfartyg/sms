@@ -1,0 +1,27 @@
+meta {
+  name: Create Datapoint
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{warehouseUrl}}/datasources/:id/datapoints
+  body: json
+  auth: none
+}
+
+params:path {
+  id: b2f1f1a7-bd6e-4ff1-9302-1aea5b616359
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tag": "ul",
+    "content": "mythirdpod18329131298321",
+    "description": "This is a pod in the cluster"
+  }
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Update Datasource
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{warehouseUrl}}/datasources/:id
+  body: json
+  auth: none
+}
+
+params:path {
+  id:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "text",
+    "description": "Updated promotional text",
+    "content": "Updated content goes here."
+  }
+}

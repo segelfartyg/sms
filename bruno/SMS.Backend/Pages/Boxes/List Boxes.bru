@@ -1,0 +1,15 @@
+meta {
+  name: List Boxes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/pages/:pageID/boxes
+  body: none
+  auth: none
+}
+
+params:path {
+  pageID:
+}

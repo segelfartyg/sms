@@ -1,0 +1,23 @@
+meta {
+  name: Create Datasource
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{warehouseUrl}}/datasources
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "Kubernetes",
+    "description": "This is a kubernetes datasource",
+    "content": "A list of pods"
+  }
+}

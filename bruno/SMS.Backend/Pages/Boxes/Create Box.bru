@@ -1,0 +1,30 @@
+meta {
+  name: Create Box
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/pages/:pageID/boxes
+  body: json
+  auth: none
+}
+
+params:path {
+  pageID:
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "text",
+    "position": 0,
+    "content": {
+      "value": "Hello world"
+    }
+  }
+}
+​

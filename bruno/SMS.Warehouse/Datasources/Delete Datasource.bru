@@ -1,0 +1,15 @@
+meta {
+  name: Delete Datasource
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{warehouseUrl}}/datasources/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id:
+}
