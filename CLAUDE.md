@@ -11,7 +11,7 @@ Four services, all run locally (only the databases are containerised):
 | Backend | `SMS.Backend/` | 8080 | Go 1.23 |
 | Warehouse | `SMS.Warehouse/` | 8081 | Go 1.23 |
 | BackOffice | `SMS.BackOffice/` | 5173 | SvelteKit + Svelte 5 |
-| Page Viewer (example) | `examples/page-viewer/` | 5174 | Vite + Svelte 5 |
+| Page Viewer (example) | `examples/web/` | 5174 | Vite + Svelte 5 |
 
 ## Running things
 

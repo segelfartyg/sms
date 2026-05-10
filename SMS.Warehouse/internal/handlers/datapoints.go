@@ -72,6 +72,7 @@ func (h *DatapointHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Tag         string `json:"tag"`
 		Content     string `json:"content"`
 		Description string `json:"description"`
+		Position    int    `json:"position"`
 	}
 	if err := decode(r, &body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -82,7 +83,7 @@ func (h *DatapointHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dp, err := h.repo.Update(r.Context(), dsID, dpID, body.Tag, body.Content, body.Description)
+	dp, err := h.repo.Update(r.Context(), dsID, dpID, body.Tag, body.Content, body.Description, body.Position)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeError(w, http.StatusNotFound, "datapoint not found")

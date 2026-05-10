@@ -18,6 +18,7 @@ type Datapoint struct {
 	Tag          string    `json:"tag"`
 	Content      string    `json:"content"`
 	Description  string    `json:"description"`
+	Position     int       `json:"position"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

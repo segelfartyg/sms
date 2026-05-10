@@ -1,0 +1,17 @@
+image:
+  repository: sms-k8s-reporter
+  tag: latest
+  pullPolicy: IfNotPresent
+
+warehouse:
+  url: "http://sms-warehouse:8081"
+
+cluster:
+  name: "my-cluster"
+
+# Empty string = all namespaces
+namespace: ""
+
+syncInterval: "30s"
+
+resources: {}

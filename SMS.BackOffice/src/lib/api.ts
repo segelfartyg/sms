@@ -20,6 +20,7 @@ export interface Datapoint {
 	tag: string;
 	content: string;
 	description: string;
+	position: number;
 }
 
 export interface Box {
@@ -115,6 +116,11 @@ export const api = {
 			wreq<Datapoint>(`/datasources/${datasourceId}/datapoints`, {
 				method: 'POST',
 				body: JSON.stringify({ tag, content, description })
+			}),
+		update: (datasourceId: string, id: string, dp: Pick<Datapoint, 'tag' | 'content' | 'description' | 'position'>) =>
+			wreq<Datapoint>(`/datasources/${datasourceId}/datapoints/${id}`, {
+				method: 'PUT',
+				body: JSON.stringify(dp)
 			}),
 		delete: (datasourceId: string, id: string) =>
 			wreq<void>(`/datasources/${datasourceId}/datapoints/${id}`, { method: 'DELETE' })

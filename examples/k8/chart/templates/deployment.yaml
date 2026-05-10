@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sms-k8s-reporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sms-k8s-reporter.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sms-k8s-reporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "sms-k8s-reporter.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "sms-k8s-reporter.fullname" . }}
+      containers:
+        - name: reporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: WAREHOUSE_URL
+              value: {{ .Values.warehouse.url | quote }}
+            - name: CLUSTER_NAME
+              value: {{ .Values.cluster.name | quote }}
+            - name: NAMESPACE
+              value: {{ .Values.namespace | quote }}
+            - name: SYNC_INTERVAL
+              value: {{ .Values.syncInterval | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

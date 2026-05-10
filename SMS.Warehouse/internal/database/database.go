@@ -14,6 +14,9 @@ var migration001 string
 //go:embed migrations/002_add_datapoints.sql
 var migration002 string
 
+//go:embed migrations/003_add_datapoint_position.sql
+var migration003 string
+
 func Connect(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -26,7 +29,7 @@ func Connect(dsn string) (*sql.DB, error) {
 }
 
 func Migrate(db *sql.DB) error {
-	for _, sql := range []string{migration001, migration002} {
+	for _, sql := range []string{migration001, migration002, migration003} {
 		if _, err := db.Exec(sql); err != nil {
 			return err
 		}

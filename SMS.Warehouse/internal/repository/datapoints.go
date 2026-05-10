@@ -14,8 +14,8 @@ func NewDatapointRepo(db *sql.DB) *DatapointRepo { return &DatapointRepo{db: db}
 
 func (r *DatapointRepo) List(ctx context.Context, datasourceID string) ([]models.Datapoint, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id, datasource_id, tag, content, description, created_at, updated_at
-		 FROM datapoints WHERE datasource_id = $1 ORDER BY created_at ASC`,
+		`SELECT id, datasource_id, tag, content, description, position, created_at, updated_at
+		 FROM datapoints WHERE datasource_id = $1 ORDER BY position ASC`,
 		datasourceID)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
@@ -25,7 +25,7 @@ func (r *DatapointRepo) List(ctx context.Context, datasourceID string) ([]models
 	out := make([]models.Datapoint, 0)
 	for rows.Next() {
 		var dp models.Datapoint
-		if err := rows.Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.CreatedAt, &dp.UpdatedAt); err != nil {
+		if err := rows.Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.Position, &dp.CreatedAt, &dp.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan: %w", err)
 		}
 		out = append(out, dp)
@@ -36,10 +36,10 @@ func (r *DatapointRepo) List(ctx context.Context, datasourceID string) ([]models
 func (r *DatapointRepo) Get(ctx context.Context, datasourceID, id string) (*models.Datapoint, error) {
 	var dp models.Datapoint
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id, datasource_id, tag, content, description, created_at, updated_at
+		`SELECT id, datasource_id, tag, content, description, position, created_at, updated_at
 		 FROM datapoints WHERE id = $1 AND datasource_id = $2`,
 		id, datasourceID,
-	).Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.CreatedAt, &dp.UpdatedAt)
+	).Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.Position, &dp.CreatedAt, &dp.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -49,25 +49,25 @@ func (r *DatapointRepo) Get(ctx context.Context, datasourceID, id string) (*mode
 func (r *DatapointRepo) Create(ctx context.Context, datasourceID, tag, content, description string) (*models.Datapoint, error) {
 	var dp models.Datapoint
 	err := r.db.QueryRowContext(ctx,
-		`INSERT INTO datapoints (datasource_id, tag, content, description)
-		 VALUES ($1, $2, $3, $4)
-		 RETURNING id, datasource_id, tag, content, description, created_at, updated_at`,
+		`INSERT INTO datapoints (datasource_id, tag, content, description, position)
+		 VALUES ($1, $2, $3, $4, COALESCE((SELECT MAX(position) + 1 FROM datapoints WHERE datasource_id = $1), 0))
+		 RETURNING id, datasource_id, tag, content, description, position, created_at, updated_at`,
 		datasourceID, tag, content, description,
-	).Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.CreatedAt, &dp.UpdatedAt)
+	).Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.Position, &dp.CreatedAt, &dp.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("insert: %w", err)
 	}
 	return &dp, nil
 }
 
-func (r *DatapointRepo) Update(ctx context.Context, datasourceID, id, tag, content, description string) (*models.Datapoint, error) {
+func (r *DatapointRepo) Update(ctx context.Context, datasourceID, id, tag, content, description string, position int) (*models.Datapoint, error) {
 	var dp models.Datapoint
 	err := r.db.QueryRowContext(ctx,
-		`UPDATE datapoints SET tag = $3, content = $4, description = $5, updated_at = NOW()
+		`UPDATE datapoints SET tag = $3, content = $4, description = $5, position = $6, updated_at = NOW()
 		 WHERE id = $1 AND datasource_id = $2
-		 RETURNING id, datasource_id, tag, content, description, created_at, updated_at`,
-		id, datasourceID, tag, content, description,
-	).Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.CreatedAt, &dp.UpdatedAt)
+		 RETURNING id, datasource_id, tag, content, description, position, created_at, updated_at`,
+		id, datasourceID, tag, content, description, position,
+	).Scan(&dp.ID, &dp.DatasourceID, &dp.Tag, &dp.Content, &dp.Description, &dp.Position, &dp.CreatedAt, &dp.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

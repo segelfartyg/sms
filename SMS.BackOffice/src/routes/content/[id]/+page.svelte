@@ -40,6 +40,25 @@
 		}
 	}
 
+	async function move(id: string, direction: -1 | 1) {
+		const sorted = [...datapoints].sort((a, b) => a.position - b.position);
+		const idx = sorted.findIndex((d) => d.id === id);
+		const other = sorted[idx + direction];
+		if (!other) return;
+
+		const a = sorted[idx];
+		await Promise.all([
+			api.datapoints.update(datasource!.id, a.id,     { tag: a.tag,     content: a.content,     description: a.description,     position: other.position }),
+			api.datapoints.update(datasource!.id, other.id, { tag: other.tag, content: other.content, description: other.description, position: a.position     }),
+		]);
+
+		datapoints = datapoints.map((d) => {
+			if (d.id === a.id)     return { ...d, position: other.position };
+			if (d.id === other.id) return { ...d, position: a.position };
+			return d;
+		}).sort((a, b) => a.position - b.position);
+	}
+
 	async function remove(id: string) {
 		if (!confirm('Delete this datapoint?')) return;
 		try {
@@ -101,7 +120,7 @@
 	<div class="empty">No datapoints yet. Add one above.</div>
 {:else}
 	<div class="dp-list">
-		{#each datapoints as dp (dp.id)}
+		{#each [...datapoints].sort((a, b) => a.position - b.position) as dp, i (dp.id)}
 			<div class="card dp-card">
 				<div class="dp-meta">
 					<span class="tag-badge tag-{dp.tag}">{dp.tag}</span>
@@ -109,6 +128,10 @@
 				</div>
 				<p class="dp-content">{dp.content}</p>
 				<div class="dp-actions">
+					<div class="order-btns">
+						<button class="ghost btn-sm" disabled={i === 0} onclick={() => move(dp.id, -1)}>↑</button>
+						<button class="ghost btn-sm" disabled={i === datapoints.length - 1} onclick={() => move(dp.id, 1)}>↓</button>
+					</div>
 					<button class="danger btn-sm" onclick={() => remove(dp.id)}>Delete</button>
 				</div>
 			</div>
@@ -225,7 +248,22 @@
 		margin-bottom: 10px;
 	}
 
-	.dp-actions { display: flex; justify-content: flex-end; }
+	.dp-actions {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.order-btns {
+		display: flex;
+		gap: 4px;
+	}
+
+	.order-btns button:disabled {
+		opacity: 0.25;
+		cursor: default;
+	}
 
 	.empty {
 		text-align: center;
