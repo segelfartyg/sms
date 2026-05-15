@@ -160,9 +160,9 @@ func findOrCreateDatasource(wh *warehouseClient, clusterName string) (datasource
 }
 
 func sync(ctx context.Context, k8s *kubernetes.Clientset, wh *warehouseClient, ds datasource, namespace string) error {
-	pods, err := k8s.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+	deployments, err := k8s.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("list pods: %w", err)
+		return fmt.Errorf("list deployments: %w", err)
 	}
 
 	existing, err := wh.listDatapoints(ds.ID)
@@ -188,20 +188,15 @@ func sync(ctx context.Context, k8s *kubernetes.Clientset, wh *warehouseClient, d
 	}
 	pos++
 
-	for _, pod := range pods.Items {
-		phase := string(pod.Status.Phase)
-		if phase == "" {
-			phase = "Unknown"
-		}
-		content := fmt.Sprintf("%s/%s (%s)", pod.Namespace, pod.Name, phase)
-		desc := pod.Spec.NodeName
-		if err := wh.createDatapoint(ds.ID, "li", content, desc, pos); err != nil {
-			log.Printf("warn: pod %s: %v", pod.Name, err)
+	for _, d := range deployments.Items {
+		content := fmt.Sprintf("%s/%s (%d/%d ready)", d.Namespace, d.Name, d.Status.ReadyReplicas, d.Status.Replicas)
+		if err := wh.createDatapoint(ds.ID, "li", content, "", pos); err != nil {
+			log.Printf("warn: deployment %s: %v", d.Name, err)
 		}
 		pos++
 	}
 
-	log.Printf("synced %d pods", len(pods.Items))
+	log.Printf("synced %d deployments", len(deployments.Items))
 	return nil
 }
 
