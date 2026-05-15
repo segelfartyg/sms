@@ -225,9 +225,15 @@ func main() {
 		log.Fatalf("k8s client: %v", err)
 	}
 
-	ds, err := findOrCreateDatasource(wh, clusterName)
-	if err != nil {
-		log.Fatalf("datasource: %v", err)
+	var ds datasource
+	for {
+		var err error
+		ds, err = findOrCreateDatasource(wh, clusterName)
+		if err == nil {
+			break
+		}
+		log.Printf("warehouse unavailable: %v — retrying in 10s", err)
+		time.Sleep(10 * time.Second)
 	}
 
 	for {
