@@ -1,6 +1,6 @@
 apiVersion: v2
-name: sms-k8s-reporter
-description: Reports Kubernetes pod state to the SMS Warehouse as a datasource.
+name: sms-k8s-exporter
+description: Exports Kubernetes deployment state to the SMS Warehouse as a datasource.
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

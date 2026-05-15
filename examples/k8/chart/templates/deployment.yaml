@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "sms-k8s-reporter.fullname" . }}
+  name: {{ include "sms-k8s-exporter.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "sms-k8s-reporter.labels" . | nindent 4 }}
+    {{- include "sms-k8s-exporter.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "sms-k8s-reporter.selectorLabels" . | nindent 6 }}
+      {{- include "sms-k8s-exporter.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "sms-k8s-reporter.selectorLabels" . | nindent 8 }}
+        {{- include "sms-k8s-exporter.selectorLabels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "sms-k8s-reporter.fullname" . }}
+      serviceAccountName: {{ include "sms-k8s-exporter.fullname" . }}
       containers:
         - name: reporter
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

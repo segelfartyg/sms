@@ -1,5 +1,5 @@
 image:
-  repository: sms-k8s-reporter
+  repository: segelfartyg/sms-k8s-exporter
   tag: latest
   pullPolicy: IfNotPresent
 

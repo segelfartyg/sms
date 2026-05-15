@@ -1,4 +1,4 @@
-module sms-k8s-reporter
+module sms-k8s-exporter
 
 go 1.23.0
 

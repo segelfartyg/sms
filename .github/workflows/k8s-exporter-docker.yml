@@ -1,4 +1,4 @@
-name: Build and push k8s-reporter
+name: Build and push k8s-exporter
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: segelfartyg/sms-k8s-reporter
+          images: segelfartyg/sms-k8s-exporter
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
