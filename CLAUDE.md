@@ -17,7 +17,7 @@ Four services, all run locally (only the databases are containerised):
 
 **Databases** (required first):
 ```bash
-docker compose up -d          # starts postgres:5432, postgres-warehouse:5433, pgadmin:5050
+docker compose up -d          # starts postgres-backend:5432, postgres-warehouse:5433, pgadmin:5050
 ```
 
 **Backend:**
@@ -44,7 +44,7 @@ npm run build     # production build
 
 **Page Viewer:**
 ```bash
-cd examples/page-viewer
+cd examples/web
 npm run dev
 npm run build
 ```
@@ -54,9 +54,34 @@ npm run build
 ```bash
 cd SMS.Backend && go build ./...
 cd SMS.Warehouse && go build ./...
+cd examples/k8 && go build ./...
 ```
 
 No tests exist yet. There are no linters configured beyond the compiler.
+
+## Deployment
+
+### Docker images
+
+Both the Warehouse and the k8s exporter example are containerised. GitHub Actions workflows build and push images to Docker Hub on every push to `main` and on `v*` tags:
+
+| Image | Workflow | Context |
+|---|---|---|
+| `segelfartyg/sms-warehouse` | `.github/workflows/warehouse-docker.yml` | `SMS.Warehouse/` |
+| `segelfartyg/sms-k8s-exporter` | `.github/workflows/k8s-exporter-docker.yml` | `examples/k8/` |
+
+Required GitHub secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`.
+
+### Helm charts
+
+Both services have Helm charts for Kubernetes deployment:
+
+| Chart | Dir | Notes |
+|---|---|---|
+| sms-warehouse | `SMS.Warehouse/chart/` | Needs `databaseUrl` value; wraps it in a Secret |
+| sms-k8s-exporter | `examples/k8/chart/` | Needs `warehouse.url` and `cluster.name` values; requires `apps` ClusterRole to list deployments |
+
+The k8s exporter chart creates a `ServiceAccount`, `ClusterRole` (list deployments), and `ClusterRoleBinding` automatically.
 
 ## Architecture
 
@@ -79,7 +104,9 @@ The two services own separate Postgres databases:
 
 **SMS.BackOffice** calls the backend for pages/boxes CRUD, and calls the warehouse **directly** (via `VITE_WAREHOUSE_URL`, default `http://localhost:8081`) for datasource and datapoint CRUD. The `api.ts` file has two base-URL helpers: `req()` → backend, `wreq()` → warehouse.
 
-**examples/page-viewer** is a minimal consumer demonstrating real usage. It fetches a page by slug from the backend (`GET /slug/{slug}`), then fetches each referenced datasource directly from the warehouse, and renders the datapoints through tag-mapped Svelte components (`H1`, `H2`, `P`, `Li` in `src/components/`).
+**examples/web** is a minimal consumer demonstrating real usage. It fetches a page by slug from the backend (`GET /slug/{slug}`), then fetches each referenced datasource directly from the warehouse, and renders the datapoints through tag-mapped Svelte components (`H1`, `H2`, `P`, `Li` in `src/components/`).
+
+**examples/k8** is a Kubernetes exporter that periodically lists deployments from the cluster and syncs them to the warehouse as a datasource. It retries on startup if the warehouse is unreachable. Key env vars: `WAREHOUSE_URL`, `CLUSTER_NAME`, `NAMESPACE` (empty = all namespaces), `SYNC_INTERVAL` (default `30s`).
 
 ### Migrations
 
