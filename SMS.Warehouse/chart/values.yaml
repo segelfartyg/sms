@@ -1,0 +1,14 @@
+image:
+  repository: segelfartyg/sms-warehouse
+  tag: latest
+  pullPolicy: Always
+
+# Postgres connection string
+databaseUrl: "postgres://postgres:postgres@localhost:5432/warehouse?sslmode=disable"
+
+allowedOrigins: ""
+
+service:
+  port: 8081
+
+resources: {}

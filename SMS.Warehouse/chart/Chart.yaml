@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sms-warehouse
+description: SMS Warehouse service — stores datasources and datapoints.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
