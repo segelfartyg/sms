@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	"sms-backend/internal/models"
@@ -15,7 +14,7 @@ func NewBoxRepo(db *sql.DB) *BoxRepo { return &BoxRepo{db: db} }
 
 func (r *BoxRepo) List(ctx context.Context, pageID string) ([]models.Box, error) {
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id, page_id, type, content, position, datasource_id, created_at, updated_at
+		`SELECT id, page_id, type, description, position, datasource_id, created_at, updated_at
 		 FROM boxes WHERE page_id = $1 ORDER BY position ASC`,
 		pageID)
 	if err != nil {
@@ -36,7 +35,7 @@ func (r *BoxRepo) List(ctx context.Context, pageID string) ([]models.Box, error)
 
 func (r *BoxRepo) Get(ctx context.Context, pageID, id string) (*models.Box, error) {
 	row := r.db.QueryRowContext(ctx,
-		`SELECT id, page_id, type, content, position, datasource_id, created_at, updated_at
+		`SELECT id, page_id, type, description, position, datasource_id, created_at, updated_at
 		 FROM boxes WHERE id = $1 AND page_id = $2`,
 		id, pageID)
 	b, err := scanBox(row)
@@ -46,16 +45,12 @@ func (r *BoxRepo) Get(ctx context.Context, pageID, id string) (*models.Box, erro
 	return &b, nil
 }
 
-func (r *BoxRepo) Create(ctx context.Context, pageID, boxType string, content map[string]any, position int, datasourceID *string) (*models.Box, error) {
-	raw, err := json.Marshal(content)
-	if err != nil {
-		return nil, fmt.Errorf("marshal content: %w", err)
-	}
+func (r *BoxRepo) Create(ctx context.Context, pageID, boxType, description string, position int, datasourceID *string) (*models.Box, error) {
 	row := r.db.QueryRowContext(ctx,
-		`INSERT INTO boxes (page_id, type, content, position, datasource_id)
+		`INSERT INTO boxes (page_id, type, description, position, datasource_id)
 		 VALUES ($1, $2, $3, $4, $5)
-		 RETURNING id, page_id, type, content, position, datasource_id, created_at, updated_at`,
-		pageID, boxType, raw, position, datasourceID)
+		 RETURNING id, page_id, type, description, position, datasource_id, created_at, updated_at`,
+		pageID, boxType, description, position, datasourceID)
 	b, err := scanBox(row)
 	if err != nil {
 		return nil, fmt.Errorf("insert: %w", err)
@@ -63,16 +58,12 @@ func (r *BoxRepo) Create(ctx context.Context, pageID, boxType string, content ma
 	return &b, nil
 }
 
-func (r *BoxRepo) Update(ctx context.Context, pageID, id, boxType string, content map[string]any, position int, datasourceID *string) (*models.Box, error) {
-	raw, err := json.Marshal(content)
-	if err != nil {
-		return nil, fmt.Errorf("marshal content: %w", err)
-	}
+func (r *BoxRepo) Update(ctx context.Context, pageID, id, boxType, description string, position int, datasourceID *string) (*models.Box, error) {
 	row := r.db.QueryRowContext(ctx,
-		`UPDATE boxes SET type = $3, content = $4, position = $5, datasource_id = $6, updated_at = NOW()
+		`UPDATE boxes SET type = $3, description = $4, position = $5, datasource_id = $6, updated_at = NOW()
 		 WHERE id = $1 AND page_id = $2
-		 RETURNING id, page_id, type, content, position, datasource_id, created_at, updated_at`,
-		id, pageID, boxType, raw, position, datasourceID)
+		 RETURNING id, page_id, type, description, position, datasource_id, created_at, updated_at`,
+		id, pageID, boxType, description, position, datasourceID)
 	b, err := scanBox(row)
 	if err != nil {
 		return nil, err
@@ -89,13 +80,9 @@ type scanner interface{ Scan(dest ...any) error }
 
 func scanBox(s scanner) (models.Box, error) {
 	var b models.Box
-	var raw []byte
 	var dsID sql.NullString
-	if err := s.Scan(&b.ID, &b.PageID, &b.Type, &raw, &b.Position, &dsID, &b.CreatedAt, &b.UpdatedAt); err != nil {
+	if err := s.Scan(&b.ID, &b.PageID, &b.Type, &b.Description, &b.Position, &dsID, &b.CreatedAt, &b.UpdatedAt); err != nil {
 		return b, fmt.Errorf("scan: %w", err)
-	}
-	if err := json.Unmarshal(raw, &b.Content); err != nil {
-		return b, fmt.Errorf("unmarshal content: %w", err)
 	}
 	if dsID.Valid {
 		b.DatasourceID = &dsID.String

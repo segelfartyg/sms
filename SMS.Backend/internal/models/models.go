@@ -12,14 +12,14 @@ type Page struct {
 }
 
 type Box struct {
-	ID           string         `json:"id"`
-	PageID       string         `json:"page_id"`
-	Type         string         `json:"type"`
-	Content      map[string]any `json:"content"`
-	Position     int            `json:"position"`
-	DatasourceID *string        `json:"datasource_id,omitempty"`
-	CreatedAt    time.Time      `json:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	ID           string    `json:"id"`
+	PageID       string    `json:"page_id"`
+	Type         string    `json:"type"`
+	Description  string    `json:"description"`
+	Position     int       `json:"position"`
+	DatasourceID *string   `json:"datasource_id,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // Datasource mirrors the shape returned by SMS.Warehouse.

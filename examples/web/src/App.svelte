@@ -7,6 +7,19 @@
   let page        = $state(null);
   let datasources = $state([]);
   let error       = $state(null);
+
+  function groupDatapoints(dps) {
+    const groups = [];
+    for (const dp of dps) {
+      const last = groups.at(-1);
+      if (last && last.tag === 'li' && dp.tag === 'li') {
+        last.items.push(dp);
+      } else {
+        groups.push({ tag: dp.tag, items: [dp] });
+      }
+    }
+    return groups;
+  }
   let theme       = $state(localStorage.getItem('theme') ?? 'dark');
 
   $effect(() => {
@@ -67,8 +80,18 @@
     <div class="feed">
       {#each datasources as ds (ds.id)}
         <article class="post">
-          {#each ds.datapoints as dp (dp.id)}
-            <svelte:element this={dp.tag}>{dp.content}</svelte:element>
+          {#each groupDatapoints(ds.datapoints) as group}
+            {#if group.tag === 'li'}
+              <ul>
+                {#each group.items as dp (dp.id)}
+                  <li>{dp.content}</li>
+                {/each}
+              </ul>
+            {:else}
+              {#each group.items as dp (dp.id)}
+                <svelte:element this={dp.tag}>{dp.content}</svelte:element>
+              {/each}
+            {/if}
           {/each}
         </article>
       {/each}
@@ -136,22 +159,13 @@
   }
 
   :global(ul) {
-    list-style: none;
-    padding: 0;
+    padding-left: 1.4rem;
+    margin-bottom: 0.75rem;
   }
 
   :global(li) {
     color: var(--fg2);
-    padding-left: 1.2rem;
-    position: relative;
     margin-bottom: 0.3rem;
-  }
-
-  :global(li::before) {
-    content: '—';
-    position: absolute;
-    left: 0;
-    color: var(--aqua);
   }
 
   header {

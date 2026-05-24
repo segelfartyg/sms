@@ -44,10 +44,10 @@ func (h *BoxHandler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *BoxHandler) Create(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageID")
 	var body struct {
-		Type         string         `json:"type"`
-		Content      map[string]any `json:"content"`
-		Position     int            `json:"position"`
-		DatasourceID *string        `json:"datasource_id"`
+		Type         string  `json:"type"`
+		Description  string  `json:"description"`
+		Position     int     `json:"position"`
+		DatasourceID *string `json:"datasource_id"`
 	}
 	if err := decode(r, &body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -57,11 +57,8 @@ func (h *BoxHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "type is required")
 		return
 	}
-	if body.Content == nil {
-		body.Content = map[string]any{}
-	}
 
-	box, err := h.boxes.Create(r.Context(), pageID, body.Type, body.Content, body.Position, body.DatasourceID)
+	box, err := h.boxes.Create(r.Context(), pageID, body.Type, body.Description, body.Position, body.DatasourceID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -73,10 +70,10 @@ func (h *BoxHandler) Update(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageID")
 	id := r.PathValue("boxID")
 	var body struct {
-		Type         string         `json:"type"`
-		Content      map[string]any `json:"content"`
-		Position     int            `json:"position"`
-		DatasourceID *string        `json:"datasource_id"`
+		Type         string  `json:"type"`
+		Description  string  `json:"description"`
+		Position     int     `json:"position"`
+		DatasourceID *string `json:"datasource_id"`
 	}
 	if err := decode(r, &body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
@@ -86,11 +83,8 @@ func (h *BoxHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "type is required")
 		return
 	}
-	if body.Content == nil {
-		body.Content = map[string]any{}
-	}
 
-	box, err := h.boxes.Update(r.Context(), pageID, id, body.Type, body.Content, body.Position, body.DatasourceID)
+	box, err := h.boxes.Update(r.Context(), pageID, id, body.Type, body.Description, body.Position, body.DatasourceID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeError(w, http.StatusNotFound, "box not found")

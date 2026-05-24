@@ -43,6 +43,42 @@
 		goto('/pages');
 	}
 
+	async function exportReadme() {
+		const dsIds = [...new Set(boxes.map((b) => b.datasource_id).filter(Boolean) as string[])];
+		const lines: string[] = [`# ${page.title}`, ``, `**Slug:** \`${page.slug}\``, ``];
+
+		if (dsIds.length === 0) {
+			lines.push('_No datasources linked to this page._');
+		} else {
+			lines.push('## Datasources', '');
+			for (const id of dsIds) {
+				const ds = datasources.find((d) => d.id === id);
+				const label = ds ? `${ds.description || ds.type} (type: \`${ds.type}\`)` : id;
+				lines.push(`### ${label}`, '');
+				const dps = await api.datapoints.list(id).catch(() => []);
+				if (dps.length === 0) {
+					lines.push('_No datapoints._', '');
+				} else {
+					for (const dp of dps) {
+						if (dp.tag === 'h1') lines.push(`# ${dp.content}`);
+						else if (dp.tag === 'h2') lines.push(`## ${dp.content}`);
+						else if (dp.tag === 'li') lines.push(`- ${dp.content}`);
+						else lines.push(dp.content);
+					}
+					lines.push('');
+				}
+			}
+		}
+
+		const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${page.slug}-datasources.md`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
 	// ── Datasource state ─────────────────────────────────────────
 	let datasources = $state<Datasource[]>([]);
 	$effect(() => {
@@ -57,7 +93,7 @@
 
 	let boxType = $state('');
 	let boxPosition = $state(0);
-	let boxContentRaw = $state('{}');
+	let boxDescription = $state('');
 	let boxDatasourceId = $state('');
 	let boxError = $state('');
 	let boxSaving = $state(false);
@@ -66,7 +102,7 @@
 		editingBox = null;
 		boxType = '';
 		boxPosition = boxes.length;
-		boxContentRaw = '{}';
+		boxDescription = '';
 		boxDatasourceId = '';
 		boxError = '';
 		showBoxForm = true;
@@ -76,7 +112,7 @@
 		editingBox = box;
 		boxType = box.type;
 		boxPosition = box.position;
-		boxContentRaw = JSON.stringify(box.content, null, 2);
+		boxDescription = box.description;
 		boxDatasourceId = box.datasource_id ?? '';
 		boxError = '';
 		showBoxForm = true;
@@ -93,13 +129,6 @@
 			boxError = 'Type is required.';
 			return;
 		}
-		let content: Record<string, unknown>;
-		try {
-			content = JSON.parse(boxContentRaw);
-		} catch {
-			boxError = 'Content must be valid JSON.';
-			return;
-		}
 		boxSaving = true;
 		boxError = '';
 		try {
@@ -108,7 +137,7 @@
 					page.id,
 					editingBox.id,
 					boxType.trim(),
-					content,
+					boxDescription,
 					boxPosition,
 					boxDatasourceId || undefined
 				);
@@ -117,7 +146,7 @@
 				const created = await api.boxes.create(
 					page.id,
 					boxType.trim(),
-					content,
+					boxDescription,
 					boxPosition,
 					boxDatasourceId || undefined
 				);
@@ -172,6 +201,7 @@
 				<span class="slug">{page.slug}</span>
 			</div>
 			<div class="page-actions">
+				<button class="ghost" onclick={exportReadme}>Export README</button>
 				<button class="ghost" onclick={startEditPage}>Edit</button>
 				<button class="danger" onclick={deletePage}>Delete Page</button>
 			</div>
@@ -210,8 +240,8 @@
 			</select>
 		</div>
 		<div class="field">
-			<label for="b-content">Content (JSON)</label>
-			<textarea id="b-content" bind:value={boxContentRaw} rows="6" spellcheck="false"></textarea>
+			<label for="b-description">Description</label>
+			<input id="b-description" bind:value={boxDescription} />
 		</div>
 		{#if boxError}<p class="error-msg">{boxError}</p>{/if}
 		<div class="form-actions">
@@ -236,7 +266,7 @@
 						<span class="ds-label">ds: {box.datasource_id}</span>
 					{/if}
 				</div>
-				<pre class="content-preview">{JSON.stringify(box.content, null, 2)}</pre>
+				{#if box.description}<p class="description-preview">{box.description}</p>{/if}
 				<div class="box-actions">
 					<button class="ghost btn-sm" onclick={() => openEditBox(box)}>Edit</button>
 					<button class="danger btn-sm" onclick={() => deleteBox(box)}>Delete</button>
@@ -392,18 +422,10 @@
 		border-radius: 4px;
 	}
 
-	.content-preview {
-		font-family: monospace;
-		font-size: 12px;
-		background: #f9fafb;
-		border: 1px solid #f3f4f6;
-		border-radius: 6px;
-		padding: 10px;
-		overflow-x: auto;
+	.description-preview {
+		font-size: 13px;
 		color: #374151;
 		margin-bottom: 12px;
-		max-height: 160px;
-		overflow-y: auto;
 	}
 
 	.box-actions {

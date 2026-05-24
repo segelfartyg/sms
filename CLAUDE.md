@@ -17,14 +17,16 @@ Four services, all run locally (only the databases are containerised):
 
 **Databases** (required first):
 ```bash
-docker compose up -d          # starts postgres-backend:5432, postgres-warehouse:5433, pgadmin:5050
+docker compose up -d          # starts postgres:5432, postgres-warehouse:5433, pgadmin:5050
 ```
 
 **Backend:**
 ```bash
 cd SMS.Backend
-go run .
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/kms?sslmode=disable go run .
 # env: DATABASE_URL, WAREHOUSE_URL (default http://localhost:8081), ALLOWED_ORIGINS, PORT
+# Note: the hardcoded default DATABASE_URL uses the hostname "postoffice" (Docker-internal only).
+# Always set DATABASE_URL explicitly when running locally.
 ```
 
 **Warehouse:**
@@ -90,11 +92,11 @@ The k8s exporter chart creates a `ServiceAccount`, `ClusterRole` (list deploymen
 The two services own separate Postgres databases:
 
 **Backend DB** (`kms`, port 5432): `pages` → `boxes`
-- A `box` belongs to a `page`, has a `type`, JSONB `content`, integer `position`, and an optional `datasource_id` (plain `TEXT`, not a foreign key — references a datasource in the warehouse DB).
+- A `box` belongs to a `page`, has a `type`, TEXT `description`, integer `position`, and an optional `datasource_id` (plain `TEXT`, not a foreign key — references a datasource in the warehouse DB).
 
 **Warehouse DB** (`warehouse`, port 5433): `datasources` → `datapoints`
 - A `datasource` has `type`, `description`, and `content` fields.
-- A `datapoint` belongs to a datasource and carries a `tag` (one of `h1`, `h2`, `p`, `li`), `content` text, and `description`.
+- A `datapoint` belongs to a datasource and carries a `tag` (one of `h1`, `h2`, `p`, `li`), `content` text, `description` text, and integer `position`.
 
 ### Service responsibilities
 
@@ -104,13 +106,15 @@ The two services own separate Postgres databases:
 
 **SMS.BackOffice** calls the backend for pages/boxes CRUD, and calls the warehouse **directly** (via `VITE_WAREHOUSE_URL`, default `http://localhost:8081`) for datasource and datapoint CRUD. The `api.ts` file has two base-URL helpers: `req()` → backend, `wreq()` → warehouse.
 
-**examples/web** is a minimal consumer demonstrating real usage. It fetches a page by slug from the backend (`GET /slug/{slug}`), then fetches each referenced datasource directly from the warehouse, and renders the datapoints through tag-mapped Svelte components (`H1`, `H2`, `P`, `Li` in `src/components/`).
+The page detail view (`/pages/[id]`) has an **Export README** button that fetches all datasources linked to the page's boxes, fetches their datapoints, and downloads a `.md` file with each datasource's datapoints rendered as native markdown (`#`, `##`, `-`, plain paragraph).
+
+**examples/web** is a minimal consumer demonstrating real usage. It fetches a page by slug from the backend (`GET /slug/{slug}`), then fetches each referenced datasource directly from the warehouse. Datapoints are rendered with `<svelte:element this={dp.tag}>`, with consecutive `li` datapoints grouped into a `<ul>` via the `groupDatapoints()` helper. The `src/components/` folder contains unused component stubs (`H1`, `H2`, `P`, `Li`).
 
 **examples/k8** is a Kubernetes exporter that periodically lists deployments from the cluster and syncs them to the warehouse as a datasource. It retries on startup if the warehouse is unreachable. Key env vars: `WAREHOUSE_URL`, `CLUSTER_NAME`, `NAMESPACE` (empty = all namespaces), `SYNC_INTERVAL` (default `30s`).
 
 ### Migrations
 
-Both Go services embed their SQL migrations and apply them with `IF NOT EXISTS` guards at startup via `database.Migrate()`. Adding a migration means creating a new numbered `.sql` file in `internal/database/migrations/`, embedding it, and appending it to the slice in `Migrate()`.
+Both Go services embed their SQL migrations and apply them at startup via `database.Migrate()`. Adding a migration means creating a new numbered `.sql` file in `internal/database/migrations/`, embedding it with `//go:embed`, and appending it to the slice in `Migrate()`. Migrations use `IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` guards so they are safe to re-run.
 
 ### CORS
 
