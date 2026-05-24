@@ -240,7 +240,9 @@
 				<div class="box-meta">
 					<span class="pos-label">pos {box.position}</span>
 					{#if box.datasource_id}
-						<span class="ds-label">ds: {box.datasource_id}</span>
+						<span class="ds-label">
+							{datasources.find((d) => d.id === box.datasource_id)?.description || box.datasource_id}
+						</span>
 					{/if}
 				</div>
 				<div class="box-actions">
