@@ -14,8 +14,6 @@ type Page struct {
 type Box struct {
 	ID           string    `json:"id"`
 	PageID       string    `json:"page_id"`
-	Type         string    `json:"type"`
-	Description  string    `json:"description"`
 	Position     int       `json:"position"`
 	DatasourceID *string   `json:"datasource_id,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`

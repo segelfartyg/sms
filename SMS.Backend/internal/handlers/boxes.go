@@ -44,8 +44,6 @@ func (h *BoxHandler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *BoxHandler) Create(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageID")
 	var body struct {
-		Type         string  `json:"type"`
-		Description  string  `json:"description"`
 		Position     int     `json:"position"`
 		DatasourceID *string `json:"datasource_id"`
 	}
@@ -53,12 +51,8 @@ func (h *BoxHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if body.Type == "" {
-		writeError(w, http.StatusBadRequest, "type is required")
-		return
-	}
 
-	box, err := h.boxes.Create(r.Context(), pageID, body.Type, body.Description, body.Position, body.DatasourceID)
+	box, err := h.boxes.Create(r.Context(), pageID, body.Position, body.DatasourceID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -70,8 +64,6 @@ func (h *BoxHandler) Update(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageID")
 	id := r.PathValue("boxID")
 	var body struct {
-		Type         string  `json:"type"`
-		Description  string  `json:"description"`
 		Position     int     `json:"position"`
 		DatasourceID *string `json:"datasource_id"`
 	}
@@ -79,12 +71,8 @@ func (h *BoxHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if body.Type == "" {
-		writeError(w, http.StatusBadRequest, "type is required")
-		return
-	}
 
-	box, err := h.boxes.Update(r.Context(), pageID, id, body.Type, body.Description, body.Position, body.DatasourceID)
+	box, err := h.boxes.Update(r.Context(), pageID, id, body.Position, body.DatasourceID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			writeError(w, http.StatusNotFound, "box not found")

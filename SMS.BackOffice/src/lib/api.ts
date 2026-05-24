@@ -26,8 +26,6 @@ export interface Datapoint {
 export interface Box {
 	id: string;
 	page_id: string;
-	type: string;
-	description: string;
 	position: number;
 	datasource_id?: string;
 	created_at: string;
@@ -74,28 +72,15 @@ export const api = {
 		delete: (id: string) => req<void>(`/pages/${id}`, { method: 'DELETE' })
 	},
 	boxes: {
-		create: (
-			pageId: string,
-			type: string,
-			description: string,
-			position: number,
-			datasourceId?: string
-		) =>
+		create: (pageId: string, position: number, datasourceId?: string) =>
 			req<Box>(`/pages/${pageId}/boxes`, {
 				method: 'POST',
-				body: JSON.stringify({ type, description, position, datasource_id: datasourceId ?? null })
+				body: JSON.stringify({ position, datasource_id: datasourceId ?? null })
 			}),
-		update: (
-			pageId: string,
-			id: string,
-			type: string,
-			description: string,
-			position: number,
-			datasourceId?: string
-		) =>
+		update: (pageId: string, id: string, position: number, datasourceId?: string) =>
 			req<Box>(`/pages/${pageId}/boxes/${id}`, {
 				method: 'PUT',
-				body: JSON.stringify({ type, description, position, datasource_id: datasourceId ?? null })
+				body: JSON.stringify({ position, datasource_id: datasourceId ?? null })
 			}),
 		delete: (pageId: string, id: string) =>
 			req<void>(`/pages/${pageId}/boxes/${id}`, { method: 'DELETE' })

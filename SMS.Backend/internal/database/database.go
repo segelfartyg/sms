@@ -14,9 +14,6 @@ var migration001 string
 //go:embed migrations/002_add_datasource_to_boxes.sql
 var migration002 string
 
-//go:embed migrations/003_boxes_content_to_description.sql
-var migration003 string
-
 func Connect(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -29,7 +26,7 @@ func Connect(dsn string) (*sql.DB, error) {
 }
 
 func Migrate(db *sql.DB) error {
-	for _, sql := range []string{migration001, migration002, migration003} {
+	for _, sql := range []string{migration001, migration002} {
 		if _, err := db.Exec(sql); err != nil {
 			return err
 		}

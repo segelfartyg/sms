@@ -20,7 +20,9 @@
     }
     return groups;
   }
-  let theme       = $state(localStorage.getItem('theme') ?? 'dark');
+
+  const THEMES = ['dark', 'light', 'bw'];
+  let theme = $state(localStorage.getItem('theme') ?? 'dark');
 
   $effect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -28,8 +30,11 @@
   });
 
   function toggleTheme() {
-    theme = theme === 'dark' ? 'light' : 'dark';
+    const i = THEMES.indexOf(theme);
+    theme = THEMES[(i + 1) % THEMES.length];
   }
+
+  const THEME_LABELS = { dark: '☀', light: '☾', bw: '◑' };
 
   $effect(() => {
     if (!slug) return;
@@ -63,7 +68,7 @@
 <header>
   {#if page}<span class="page-title">{page.title}</span>{/if}
   <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
-    {theme === 'dark' ? '☀' : '☾'}
+    {THEME_LABELS[theme]}
   </button>
 </header>
 
@@ -80,16 +85,23 @@
     <div class="feed">
       {#each datasources as ds (ds.id)}
         <article class="post">
+          {#if ds.description}
+            <p class="ds-desc">{ds.description}</p>
+          {/if}
           {#each groupDatapoints(ds.datapoints) as group}
             {#if group.tag === 'li'}
               <ul>
                 {#each group.items as dp (dp.id)}
-                  <li>{dp.content}</li>
+                  <li>
+                    {dp.content}
+                    {#if dp.description}<span class="dp-desc"> — {dp.description}</span>{/if}
+                  </li>
                 {/each}
               </ul>
             {:else}
               {#each group.items as dp (dp.id)}
                 <svelte:element this={dp.tag}>{dp.content}</svelte:element>
+                {#if dp.description}<p class="dp-desc">{dp.description}</p>{/if}
               {/each}
             {/if}
           {/each}
@@ -124,6 +136,23 @@
     --orange:   #af3a03;
     --aqua:     #427b58;
     --border:   #d5c4a1;
+  }
+
+  :global(:root[data-theme="bw"]) {
+    --bg:       #ffffff;
+    --bg1:      #f8f8f8;
+    --bg2:      #eeeeee;
+    --fg:       #000000;
+    --fg2:      #111111;
+    --fg3:      #555555;
+    --yellow:   #000000;
+    --orange:   #cc0000;
+    --aqua:     #000000;
+    --border:   #cccccc;
+  }
+
+  :global([data-theme="bw"] body) {
+    font-family: 'Times New Roman', Times, serif;
   }
 
   :global(*, *::before, *::after) { box-sizing: border-box; margin: 0; padding: 0; }
@@ -223,6 +252,24 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 28px 32px;
+  }
+
+  .ds-desc {
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--fg3);
+    margin-bottom: 16px;
+  }
+
+  .dp-desc {
+    font-size: 13px;
+    font-style: italic;
+    color: var(--fg3);
+    margin-top: -0.4rem;
+    margin-bottom: 0.75rem;
   }
 
   .status {

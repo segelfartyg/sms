@@ -91,18 +91,14 @@
 	let showBoxForm = $state(false);
 	let editingBox = $state<Box | null>(null);
 
-	let boxType = $state('');
 	let boxPosition = $state(0);
-	let boxDescription = $state('');
 	let boxDatasourceId = $state('');
 	let boxError = $state('');
 	let boxSaving = $state(false);
 
 	function openNewBox() {
 		editingBox = null;
-		boxType = '';
 		boxPosition = boxes.length;
-		boxDescription = '';
 		boxDatasourceId = '';
 		boxError = '';
 		showBoxForm = true;
@@ -110,9 +106,7 @@
 
 	function openEditBox(box: Box) {
 		editingBox = box;
-		boxType = box.type;
 		boxPosition = box.position;
-		boxDescription = box.description;
 		boxDatasourceId = box.datasource_id ?? '';
 		boxError = '';
 		showBoxForm = true;
@@ -125,10 +119,6 @@
 	}
 
 	async function saveBox() {
-		if (!boxType.trim()) {
-			boxError = 'Type is required.';
-			return;
-		}
 		boxSaving = true;
 		boxError = '';
 		try {
@@ -136,8 +126,6 @@
 				const updated = await api.boxes.update(
 					page.id,
 					editingBox.id,
-					boxType.trim(),
-					boxDescription,
 					boxPosition,
 					boxDatasourceId || undefined
 				);
@@ -145,8 +133,6 @@
 			} else {
 				const created = await api.boxes.create(
 					page.id,
-					boxType.trim(),
-					boxDescription,
 					boxPosition,
 					boxDatasourceId || undefined
 				);
@@ -163,7 +149,7 @@
 	}
 
 	async function deleteBox(box: Box) {
-		if (!confirm(`Delete box "${box.type}"?`)) return;
+		if (!confirm(`Delete box at position ${box.position}?`)) return;
 		await api.boxes.delete(page.id, box.id);
 		boxes = boxes.filter((b) => b.id !== box.id);
 	}
@@ -222,26 +208,18 @@
 		<h3>{editingBox ? 'Edit Box' : 'New Box'}</h3>
 		<div class="form-row">
 			<div class="field">
-				<label for="b-type">Type</label>
-				<input id="b-type" bind:value={boxType} placeholder="e.g. text, image, hero" />
+				<label for="b-datasource">Datasource</label>
+				<select id="b-datasource" bind:value={boxDatasourceId}>
+					<option value="">— none —</option>
+					{#each datasources as ds (ds.id)}
+						<option value={ds.id}>{ds.description || ds.type} ({ds.id})</option>
+					{/each}
+				</select>
 			</div>
 			<div class="field field-sm">
 				<label for="b-pos">Position</label>
 				<input id="b-pos" type="number" bind:value={boxPosition} min="0" />
 			</div>
-		</div>
-		<div class="field">
-			<label for="b-datasource">Datasource</label>
-			<select id="b-datasource" bind:value={boxDatasourceId}>
-				<option value="">— none —</option>
-				{#each datasources as ds (ds.id)}
-					<option value={ds.id}>{ds.description || ds.type} ({ds.id})</option>
-				{/each}
-			</select>
-		</div>
-		<div class="field">
-			<label for="b-description">Description</label>
-			<input id="b-description" bind:value={boxDescription} />
 		</div>
 		{#if boxError}<p class="error-msg">{boxError}</p>{/if}
 		<div class="form-actions">
@@ -260,13 +238,11 @@
 		{#each boxes as box (box.id)}
 			<div class="card box-card">
 				<div class="box-meta">
-					<span class="type-badge">{box.type}</span>
 					<span class="pos-label">pos {box.position}</span>
 					{#if box.datasource_id}
 						<span class="ds-label">ds: {box.datasource_id}</span>
 					{/if}
 				</div>
-				{#if box.description}<p class="description-preview">{box.description}</p>{/if}
 				<div class="box-actions">
 					<button class="ghost btn-sm" onclick={() => openEditBox(box)}>Edit</button>
 					<button class="danger btn-sm" onclick={() => deleteBox(box)}>Delete</button>
@@ -335,7 +311,7 @@
 
 	.form-row {
 		display: grid;
-		grid-template-columns: 1fr 120px;
+		grid-template-columns: 1fr 100px;
 		gap: 12px;
 		margin-bottom: 12px;
 	}
@@ -399,16 +375,6 @@
 		margin-bottom: 10px;
 	}
 
-	.type-badge {
-		background: #ede9fe;
-		color: #4f46e5;
-		font-size: 11px;
-		font-weight: 600;
-		padding: 2px 8px;
-		border-radius: 4px;
-		font-family: monospace;
-	}
-
 	.pos-label {
 		font-size: 11px;
 		color: #9ca3af;
@@ -420,12 +386,6 @@
 		background: #d1fae5;
 		padding: 1px 6px;
 		border-radius: 4px;
-	}
-
-	.description-preview {
-		font-size: 13px;
-		color: #374151;
-		margin-bottom: 12px;
 	}
 
 	.box-actions {
