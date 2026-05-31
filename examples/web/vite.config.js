@@ -5,5 +5,9 @@ export default defineConfig({
   plugins: [svelte()],
   server: {
     port: 5174,
+    proxy: {
+      '/api': { target: 'http://localhost:8080', rewrite: (p) => p.replace(/^\/api/, '') },
+      '/warehouse': { target: 'http://localhost:8081', rewrite: (p) => p.replace(/^\/warehouse/, '') },
+    },
   },
 });

@@ -1,0 +1,13 @@
+image:
+  repository: segelfartyg/sms-page-viewer
+  tag: latest
+  pullPolicy: Always
+
+# Upstream service URLs — must be reachable from inside the cluster
+backendUrl: "http://sms-backend:8080"
+warehouseUrl: "http://sms-warehouse:8081"
+
+service:
+  port: 5174
+
+resources: {}

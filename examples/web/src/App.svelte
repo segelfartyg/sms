@@ -1,6 +1,6 @@
 <script>
-  const API       = import.meta.env.VITE_API_URL       ?? 'http://localhost:8080';
-  const WAREHOUSE = import.meta.env.VITE_WAREHOUSE_URL ?? 'http://localhost:8081';
+  const API       = '/api';
+  const WAREHOUSE = '/warehouse';
 
   const path    = window.location.pathname;
   const dsMatch = path.match(/^\/ds\/([^/]+)$/);

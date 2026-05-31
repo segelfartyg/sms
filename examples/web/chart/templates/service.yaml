@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sms-page-viewer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "sms-page-viewer.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "sms-page-viewer.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
