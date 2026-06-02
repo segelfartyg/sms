@@ -1,4 +1,4 @@
-name: Build and push page viewer
+name: Build and push example page viewer
 
 on:
   push:
