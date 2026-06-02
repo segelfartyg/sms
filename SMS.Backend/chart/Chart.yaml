@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sms-backend
+description: SMS Backend service — owns pages and boxes.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

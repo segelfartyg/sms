@@ -1,0 +1,17 @@
+image:
+  repository: segelfartyg/sms-backend
+  tag: latest
+  pullPolicy: Always
+
+# Postgres connection string for the backend DB (kms, port 5432)
+databaseUrl: "postgres://postgres:postgres@localhost:5432/kms?sslmode=disable"
+
+# URL of the warehouse service, reachable from inside the cluster
+warehouseUrl: "http://sms-warehouse:8081"
+
+allowedOrigins: ""
+
+service:
+  port: 8080
+
+resources: {}
