@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-//go:embed dist
 var dist embed.FS
 
 func mustProxy(env, fallback string) *httputil.ReverseProxy {
