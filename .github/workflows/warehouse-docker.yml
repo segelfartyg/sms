@@ -6,6 +6,8 @@ on:
       - main
     tags:
       - "v*"
+    paths:
+      - "SMS.Warehouse/**"
 
 jobs:
   build-and-push:

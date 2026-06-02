@@ -6,6 +6,8 @@ on:
       - main
     tags:
       - "v*"
+    paths:
+      - "examples/k8/**"
 
 jobs:
   build-and-push:
