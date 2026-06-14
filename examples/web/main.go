@@ -2,10 +2,10 @@ package main
 
 import (
 	"embed"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
@@ -14,17 +14,26 @@ import (
 //go:embed dist
 var dist embed.FS
 
-func mustProxy(env, fallback string) *httputil.ReverseProxy {
+func mustBaseURL(env, fallback string) string {
 	raw := os.Getenv(env)
 	if raw == "" {
 		raw = fallback
 	}
-	u, err := url.Parse(raw)
+	log.Printf("%s = %s", env, raw)
+	return strings.TrimSuffix(raw, "/")
+}
+
+// proxyGet fetches upstreamURL and forwards its body and status code as JSON.
+func proxyGet(w http.ResponseWriter, upstreamURL string) {
+	resp, err := http.Get(upstreamURL)
 	if err != nil {
-		log.Fatalf("invalid %s: %v", env, err)
+		http.Error(w, "upstream unreachable", http.StatusBadGateway)
+		return
 	}
-	log.Printf("%s → %s", env, u)
-	return httputil.NewSingleHostReverseProxy(u)
+	defer resp.Body.Close()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
 }
 
 func main() {
@@ -33,8 +42,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.Handle("/api/", http.StripPrefix("/api", mustProxy("BACKEND_URL", "http://localhost:8080")))
-	http.Handle("/warehouse/", http.StripPrefix("/warehouse", mustProxy("WAREHOUSE_URL", "http://localhost:8081")))
+	backendURL := mustBaseURL("BACKEND_URL", "http://localhost:8080")
+	warehouseURL := mustBaseURL("WAREHOUSE_URL", "http://localhost:8081")
+
+	http.HandleFunc("GET /api/slug/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		proxyGet(w, backendURL+"/slug/"+url.PathEscape(r.PathValue("slug")))
+	})
+	http.HandleFunc("GET /warehouse/datasources/{id}", func(w http.ResponseWriter, r *http.Request) {
+		proxyGet(w, warehouseURL+"/datasources/"+url.PathEscape(r.PathValue("id")))
+	})
 
 	fileServer := http.FileServer(http.FS(root))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
